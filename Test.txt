@@ -1,2 +1,0 @@
-This is a sample file to test the git branching process.
-This is a new line.
