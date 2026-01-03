@@ -9,7 +9,7 @@ module "vm" {
   vm_name           = "example-vm"
   vm_size           = "Standard_B1s"
   admin_username    = "adminuser"
-  admin_password    = "P@ssw0rd1234!"  # Replace with a secure password
+  admin_password    = ""  # Replace with a secure password
   subnet_id         = module.vnet.subnet_id
   vnet_resource_group = module.vnet.resource_group_name
 }
