@@ -22,10 +22,17 @@ HTML = """<!doctype html>
 
   <hr/>
 
-  <h2>Send JSON via Fetch</h2>
+  <h2>Send JSON via Fetch (POST)</h2>
   <input id="jname" placeholder="name" />
   <input id="jmsg" placeholder="message" />
-  <button onclick="sendJson()">Send JSON</button>
+  <button onclick="sendJson()">Send JSON (POST)</button>
+
+  <hr/>
+
+  <h2>Send JSON via Fetch (PUT)</h2>
+  <input id="pname" placeholder="name" />
+  <input id="pmsg" placeholder="message" />
+  <button onclick="sendPut()">Send JSON (PUT)</button>
 
   <script>
   async function sendJson(){
@@ -33,6 +40,18 @@ HTML = """<!doctype html>
     const message = document.getElementById('jmsg').value;
     const resp = await fetch('/submit-json', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, message })
+    });
+    const data = await resp.json();
+    alert('Server response: ' + JSON.stringify(data));
+  }
+
+  async function sendPut(){
+    const name = document.getElementById('pname').value;
+    const message = document.getElementById('pmsg').value;
+    const resp = await fetch('/submit-put', {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, message })
     });
@@ -62,6 +81,35 @@ async def submit_json(request: Request):
     data = await request.json()
     print(f"Received (json) - {data!r}")
     return JSONResponse({"status": "ok", "received": data})
+
+@app.put("/submit-put")
+async def submit_put(request: Request):
+    """
+    Accepts PUT requests with either application/json or form-encoded data.
+    Prints received values to the server console and returns a JSON confirmation.
+    """
+    content_type = request.headers.get("content-type", "")
+    name = None
+    message = None
+
+    if "application/json" in content_type:
+        try:
+            data = await request.json()
+            name = data.get("name")
+            message = data.get("message")
+            print(f"Received (put, json) - {data!r}")
+        except Exception as e:
+            # Malformed JSON
+            print(f"Error parsing JSON in PUT: {e}")
+            return JSONResponse({"status": "error", "detail": "invalid json"}, status_code=400)
+    else:
+        # fallback to form data
+        form = await request.form()
+        name = form.get("name")
+        message = form.get("message")
+        print(f"Received (put, form) - name: {name!r}, message: {message!r}")
+
+    return JSONResponse({"status": "ok", "method": "PUT", "received": {"name": name, "message": message}})
 
 if __name__ == "__main__":
     # For direct python main.py execution (uvicorn recommended)
